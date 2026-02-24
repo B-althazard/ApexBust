@@ -14,7 +14,6 @@ export default function SettingsPage() {
   const setThemeMode = useSettingsStore(x => x.setThemeMode);
   const setAnchorWeekday = useSettingsStore(x => x.setAnchorWeekday);
   const setDefaultRestWeekdays = useSettingsStore(x => x.setDefaultRestWeekdays);
-  const setWeightUnit = useSettingsStore(x => x.setWeightUnit);
   const setBackupReminder = useSettingsStore(x => x.setBackupReminder);
 
   const [importText, setImportText] = useState('');
@@ -42,7 +41,7 @@ export default function SettingsPage() {
           <div className="muted">{__BUILD_VERSION__}</div>
           <div className="h2" style={{ marginTop: 12 }}>Changelog</div>
           <ul style={{ margin: 0, paddingLeft: 18 }}>
-            <li>v1.2.1 — PWA update stability, settings UX, workout stop/reset, backups & converter fixes</li>
+            <li>v1.2.2 — PWA update stability, settings UX, workout stop/reset, backups & converter fixes</li>
             <li>v1.1 — ApexBust branding, Markdown → JSON, backups, AMOLED theme</li>
             <li>v1.0 — Initial release</li>
           </ul>
