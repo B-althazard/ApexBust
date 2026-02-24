@@ -1,6 +1,6 @@
 {
-  "name": "Workout Tracker",
-  "short_name": "Workouts",
+  "name": "ApexBust",
+  "short_name": "ApexBust",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#0b0f14",
