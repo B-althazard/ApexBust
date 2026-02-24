@@ -28,6 +28,8 @@ export default function TrackerPage() {
   const [sets, setSets] = useState<any[]>([]);
   const [editSet, setEditSet] = useState<any | null>(null);
   const [exercisePicker, setExercisePicker] = useState<{ open: boolean; mode: 'ADD'|'SWAP'; targetId?: string } | null>(null);
+  const [resetPrompt, setResetPrompt] = useState(false);
+  const [stopPrompt, setStopPrompt] = useState(false);
 
   const sid = sessionId!;
   useEffect(() => { setActiveSession(sid); return () => setActiveSession(null); }, [sid, setActiveSession]);
@@ -94,7 +96,21 @@ export default function TrackerPage() {
     setSession(await db.sessions.get(sid));
   }
 
-  async function onLogSet(payload: any) {
+  async function deleteSessionAndData() {
+    // Delete session + sets + sessionExercises; unlink schedule if linked
+    const s = await db.sessions.get(sid);
+    const sch = s?.scheduleId ? await db.schedule.get(s.date as any).catch(()=>null) : null;
+    await db.transaction('rw', db.sessions, db.sets, db.sessionExercises, db.schedule, async () => {
+      await db.sets.where('sessionId').equals(sid).delete();
+      await db.sessionExercises.where('sessionId').equals(sid).delete();
+      await db.sessions.delete(sid);
+      if (sch?.linkedSessionId === sid) {
+        await db.schedule.put({ ...sch, linkedSessionId: null, state: 'PLANNED', updatedAt: Date.now() });
+      }
+    });
+  }
+
+async function onLogSet(payload: any) {
     if (!currentSE) return;
     // optimistic UI: add temporary row
     const tempId = `tmp_${Math.random().toString(16).slice(2)}`;
@@ -120,7 +136,11 @@ export default function TrackerPage() {
           <div className="h1">{session.dayTemplateId ? 'Workout' : 'Ad-hoc workout'}</div>
           <div className="muted">{fmtDuration(elapsedSec)}</div>
         </div>
-        <button className="primary" onClick={() => nav(`/endlog/${sid}`)}>Finish</button>
+        <div className="row" style={{ gap: 10, flexWrap:'wrap', justifyContent:'flex-end' }}>
+          <button className="ghost" onClick={() => setStopPrompt(true)}>Stop</button>
+          <button className="danger" onClick={() => setResetPrompt(true)}>Reset</button>
+          <button className="primary" onClick={() => nav(`/endlog/${sid}`)}>Finish</button>
+        </div>
       </div>
 
       <div className="chip" style={{ marginBottom: 10 }}>Next: {nextSE ? (exercises.find(e=>e.id===nextSE.exerciseId)?.name ?? nextSE.exerciseId) : '—'}</div>
@@ -210,6 +230,40 @@ export default function TrackerPage() {
           }}
         />
       ) : null}
+    {stopPrompt ? (
+  <Modal
+    title="Stop workout"
+    onClose={() => setStopPrompt(false)}
+    actions={
+      <>
+        <button className="ghost" onClick={() => setStopPrompt(false)}>Cancel</button>
+        <button className="primary" onClick={() => { setStopPrompt(false); nav(`/endlog/${sid}`); }}>End session</button>
+      </>
+    }
+  >
+    <div className="muted">Stop will end the session and open the End Log.</div>
+  </Modal>
+) : null}
+
+{resetPrompt ? (
+  <Modal
+    title="Reset workout"
+    onClose={() => setResetPrompt(false)}
+    actions={
+      <>
+        <button className="ghost" onClick={() => setResetPrompt(false)}>Cancel</button>
+        <button className="danger" onClick={async () => {
+          setResetPrompt(false);
+          await deleteSessionAndData();
+          nav(`/workout/today`);
+        }}>Delete</button>
+      </>
+    }
+  >
+    <div className="muted">This will permanently delete the current session and all logged sets.</div>
+  </Modal>
+) : null}
+
     </>
   );
 }

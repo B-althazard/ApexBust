@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { db } from '../../db/db'
-import { toYMD } from '../../utils/date'
+import { toYMD, formatDisplayDate } from '../../utils/date'
 import { startSessionFromSchedule } from '../../domain/services/SessionService'
 import ExerciseCard from '../components/ExerciseCard'
 import Modal from '../components/Modal'
@@ -18,6 +18,7 @@ export default function WorkoutPage() {
   const [session, setSession] = useState<any | null>(null);
   const [exList, setExList] = useState<any[]>([]);
   const [swapPrompt, setSwapPrompt] = useState<{ open: boolean } | null>(null);
+  const [resumeMissing, setResumeMissing] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -64,93 +65,17 @@ export default function WorkoutPage() {
       nav(`/tracker/${schedule.linkedSessionId}`);
       return;
     }
+    if (cta.mode === 'RESUME') {
+      if (session?.id) {
+        nav(`/tracker/${session.id}`);
+      } else {
+        setResumeMissing(true);
+      }
+      return;
+    }
     const id = await startSessionFromSchedule(date);
     nav(`/tracker/${id}`);
   }
-
-  if (!schedule) {
-    return (
-      <>
-        <div className="h1">Workout</div>
-        <div className="card">
-          <div className="muted">No schedule entry for this date yet.</div>
-          <div className="row" style={{ marginTop: 12 }}>
-            <button className="primary" onClick={() => void generateWeekSchedule(date).then(()=>window.location.reload())}>Generate week</button>
-          </div>
-        </div>
-      </>
-    );
-  }
-
-  return (
-    <>
-      <div className="h1">{schedule.type === 'WORKOUT' ? (schedule.title ?? 'Workout') : 'Rest day'}</div>
-      <div className="muted" style={{ marginBottom: 10 }}>{date}</div>
-
-      {schedule.type === 'WORKOUT' ? (
-        <>
-          <div className="grid">
-            {exList.map(({de, ex, snippet}) => (
-              <ExerciseCard
-                key={de.id}
-                name={ex?.name ?? de.exerciseId}
-                prescription={de.prescription}
-                lastWeekSnippet={snippet}
-              />
-            ))}
-          </div>
-
-          <div className="row" style={{ marginTop: 12, gap: 10 }}>
-            <button className="primary" onClick={() => void onPrimary()}>{cta.label}</button>
-            {schedule.state === 'PLANNED' ? (
-              <>
-                <button className="ghost" onClick={() => setSwapPrompt({ open: true })}>Insert rest day</button>
-                <button className="ghost" onClick={() => void convertWorkoutToRest(date).then(()=>window.location.reload())}>Convert to rest</button>
-              </>
-            ) : null}
-          </div>
-        </>
-      ) : (
-        <div className="card">
-          <div className="muted">Rest day.</div>
-          <div className="row" style={{ marginTop: 12 }}>
-            <button className="primary" onClick={async () => {
-              // ad-hoc workout: convert to WORKOUT with no template
-              await db.schedule.put({ ...schedule, type:'WORKOUT', title:'Ad-hoc workout', dayTemplateId:null, programId:null, programVersionId:null, state:'PLANNED', updatedAt: Date.now() });
-              window.location.reload();
-            }}>Convert to workout</button>
-          </div>
-        </div>
-      )}
-
-      {swapPrompt?.open ? (
-        <Modal
-          title="Insert extra rest day"
-          onClose={() => setSwapPrompt(null)}
-          actions={
-            <>
-              <button className="ghost" onClick={() => setSwapPrompt(null)}>Cancel</button>
-              <button className="primary" onClick={async () => {
-                const res = await insertRestDay(date);
-                setSwapPrompt(null);
-                alert(res.swapped ? 'Swapped with a default rest day.' : 'No rest day available to swap; week shortened.');
-                window.location.reload();
-              }}>Swap with default rest day</button>
-              <button className="danger" onClick={async () => {
-                // NO path: shorten week
-                await db.schedule.put({ ...schedule, type:'REST', title:'Rest', updatedAt: Date.now() });
-                setSwapPrompt(null);
-                window.location.reload();
-              }}>No (shorten week)</button>
-            </>
-          }
-        >
-          <div className="muted">Do you want to preserve the weekly structure by swapping with a default rest day?</div>
-        </Modal>
-      ) : null}
-    </>
-  );
-}
 
 function prevYMD(date: string): string {
   const [y,m,d] = date.split('-').map(Number);

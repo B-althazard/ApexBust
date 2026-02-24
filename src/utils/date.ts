@@ -56,3 +56,10 @@ export function monthGrid(year: number, monthIndex0: number): { ymd: YMD; inMont
   }
   return out;
 }
+
+export function formatDisplayDate(ymd: string): string {
+  // YYYY-MM-DD -> DD-MM-YYYY
+  const [y,m,d] = ymd.split('-');
+  if (!y || !m || !d) return ymd;
+  return `${d}-${m}-${y}`;
+}

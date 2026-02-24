@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSettingsStore } from '../../state/settingsStore'
+import { WEEKDAY_NAMES } from '../../utils/weekdays'
 import { importProgram } from '../../domain/services/ProgramService'
 import { markdownToProgramJSON } from '../../utils/markdownToJson'
 import { generateWeekSchedule } from '../../domain/services/ScheduleService'
@@ -35,6 +36,17 @@ export default function SettingsPage() {
   return (
     <>
       <div className="h1">Settings</div>
+
+        <div className="card">
+          <div className="h2">Version</div>
+          <div className="muted">{__BUILD_VERSION__}</div>
+          <div className="h2" style={{ marginTop: 12 }}>Changelog</div>
+          <ul style={{ margin: 0, paddingLeft: 18 }}>
+            <li>v1.2 — PWA update stability, settings UX, workout stop/reset, backups & converter fixes</li>
+            <li>v1.1 — ApexBust branding, Markdown → JSON, backups, AMOLED theme</li>
+            <li>v1.0 — Initial release</li>
+          </ul>
+        </div>
 
       <div className="grid">
         <div className="card">

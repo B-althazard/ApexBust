@@ -54,13 +54,13 @@ export async function generateWeekSchedule(anchorDate: YMD): Promise<void> {
         row = {
           id: ulid(),
           date,
-          type: isRest ? 'REST' : 'REST',
+          type: isRest ? 'REST' : 'WORKOUT',
           programId: null,
           programVersionId: null,
           dayTemplateId: null,
-          title: isRest ? 'Rest' : 'Rest',
-          state: 'PLANNED',
+          title: isRest ? 'Rest' : 'Ad-hoc workout',
           linkedSessionId: null,
+          state: 'PLANNED',
           createdAt: now,
           updatedAt: now,
         };

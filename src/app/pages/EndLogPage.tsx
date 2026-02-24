@@ -13,23 +13,44 @@ export default function EndLogPage() {
   const [mindMuscle, setMindMuscle] = useState(3);
   const [mentalState, setMentalState] = useState('');
   const [preWorkoutUsed, setPreWorkoutUsed] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   async function onSubmit() {
-    const endLog: EndLog = { performance, energy, mindMuscle, mentalState: mentalState.trim() || undefined, preWorkoutUsed: preWorkoutUsed.trim() || undefined };
-    await finishSession(sessionId!, endLog);
-    // Permanent backup via Downloads (browser download)
+    if (!sessionId) {
+      alert('Missing session id.');
+      return;
+    }
+    if (submitting) return;
+    setSubmitting(true);
     try {
-      const blob = await buildFinalBackupBlob(sessionId!);
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `ApexBust-backup-${new Date().toISOString().slice(0,10)}-${sessionId}.json`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      URL.revokeObjectURL(url);
-    } catch {}
-    nav('/');
+      const endLog: EndLog = {
+        performance,
+        energy,
+        mindMuscle,
+        mentalState: mentalState.trim() || undefined,
+        preWorkoutUsed: preWorkoutUsed.trim() || undefined,
+      };
+      await finishSession(sessionId, endLog);
+
+      // Permanent backup via Downloads (browser download)
+      try {
+        const blob = await buildFinalBackupBlob(sessionId);
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ApexBust-backup-${new Date().toISOString().slice(0,10)}-${sessionId}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } catch {}
+
+      nav('/');
+    } catch (e:any) {
+      alert(e?.message ?? 'Failed to submit end log.');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -48,7 +69,7 @@ export default function EndLogPage() {
             <label>Pre-workout used</label>
             <input value={preWorkoutUsed} onChange={(e)=>setPreWorkoutUsed(e.target.value)} />
           </div>
-          <button className="primary" onClick={() => void onSubmit()}>Submit</button>
+          <button className="primary" disabled={submitting} onClick={() => void onSubmit()}>{submitting ? "Submitting…" : "Submit"}</button>
         </div>
       </div>
     </>

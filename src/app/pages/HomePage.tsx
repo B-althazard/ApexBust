@@ -73,7 +73,16 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="h1">Home</div>
+<div className="row between" style={{ marginBottom: 14 }}>
+  <div className="row" style={{ gap: 12, alignItems: 'center' }}>
+    <img src={`${import.meta.env.BASE_URL}icons/icon-192.png`} alt="ApexBust" style={{ width: 34, height: 34, borderRadius: 10 }} />
+    <div>
+      <div className="h1" style={{ margin: 0 }}>ApexBust</div>
+      <div className="muted" style={{ fontSize: 12 }}>Workout tracker</div>
+    </div>
+  </div>
+</div>
+
       <CalendarMonth
         year={year}
         monthIndex0={monthIndex0}
