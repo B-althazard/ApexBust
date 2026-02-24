@@ -62,5 +62,5 @@ function applyTheme(mode: SettingsRow['themeMode']) {
     root.removeAttribute('data-theme');
     return;
   }
-  root.setAttribute('data-theme', mode === 'LIGHT' ? 'light' : 'dark');
+  root.setAttribute('data-theme', mode === 'LIGHT' ? 'light' : (mode === 'AMOLED' ? 'amoled' : 'dark'));
 }

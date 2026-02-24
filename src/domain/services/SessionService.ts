@@ -3,6 +3,7 @@ import { ulid } from '../../utils/ulid'
 import { invariant } from '../../utils/assert'
 import type { EndLog, SetType } from '../models/types'
 import { updatePRsForSession, recomputePRForExercise } from './PRService'
+import { snapshotSessionToTmp, snapshotSessionFinalToInternal, purgeTmpBackupsKeepLastWorkoutDay } from './BackupService'
 import { applySessionCompletion, applySessionEdit } from './StatsService'
 
 export async function startSessionFromSchedule(date: string): Promise<string> {
@@ -128,6 +129,9 @@ export async function logSet(sessionId: string, sessionExerciseId: string, setPa
     }
   });
 
+  // tmp backup after each set (best-effort)
+  try { await snapshotSessionToTmp(sessionId); } catch {}
+
   return row.id;
 }
 
@@ -155,6 +159,9 @@ export async function finishSession(sessionId: string, endLog: EndLog): Promise<
     // PR + stats
     await updatePRsForSession(sessionId);
     await applySessionCompletion(sessionId);
+
+    // final snapshot to internal storage (best-effort)
+    try { await snapshotSessionFinalToInternal(sessionId); } catch {}
 
     // archive
     await db.sessions.put({ ...completed, state: 'ARCHIVED', updatedAt: Date.now() });

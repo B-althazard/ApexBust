@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { finishSession } from '../../domain/services/SessionService'
+import { buildFinalBackupBlob } from '../../domain/services/BackupService'
 import type { EndLog } from '../../domain/models/types'
 
 export default function EndLogPage() {
@@ -16,6 +17,18 @@ export default function EndLogPage() {
   async function onSubmit() {
     const endLog: EndLog = { performance, energy, mindMuscle, mentalState: mentalState.trim() || undefined, preWorkoutUsed: preWorkoutUsed.trim() || undefined };
     await finishSession(sessionId!, endLog);
+    // Permanent backup via Downloads (browser download)
+    try {
+      const blob = await buildFinalBackupBlob(sessionId!);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `ApexBust-backup-${new Date().toISOString().slice(0,10)}-${sessionId}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {}
     nav('/');
   }
 

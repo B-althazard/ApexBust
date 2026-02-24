@@ -1,4 +1,4 @@
-# WebAPP Workout Tracker (PWA, Android-focused)
+# WebAPP ApexBust (PWA, Android-focused)
 
 Local-first workout tracker PWA built for GitHub Pages (static hosting).
 

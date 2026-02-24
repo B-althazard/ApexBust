@@ -7,7 +7,7 @@ export type ScheduleType = 'WORKOUT'|'REST';
 export type ScheduleState = 'PLANNED'|'COMPLETED'|'SKIPPED';
 export type SessionState = 'PLANNED'|'IN_PROGRESS'|'COMPLETED'|'ARCHIVED';
 export type SetType = 'WARMUP'|'WORKING'|'CARDIO'|'OTHER';
-export type ThemeMode = 'SYSTEM'|'LIGHT'|'DARK';
+export type ThemeMode = 'SYSTEM'|'LIGHT'|'DARK'|'AMOLED';
 
 export type Prescription = {
   targetSets?: number;

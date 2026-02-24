@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSettingsStore } from '../../state/settingsStore'
 import { importProgram } from '../../domain/services/ProgramService'
+import { markdownToProgramJSON } from '../../utils/markdownToJson'
 import { generateWeekSchedule } from '../../domain/services/ScheduleService'
 import { exportMarkdownFullHistory, download, recordExport } from '../../domain/services/ExportService'
 import Modal from '../components/Modal'
@@ -16,6 +17,8 @@ export default function SettingsPage() {
   const setBackupReminder = useSettingsStore(x => x.setBackupReminder);
 
   const [importText, setImportText] = useState('');
+  const [mdText, setMdText] = useState('');
+  const [generatedJSON, setGeneratedJSON] = useState<string>('');
   const [importAnchor, setImportAnchor] = useState<number | null>(null);
 
   useEffect(() => { void load(); }, [load]);
@@ -40,6 +43,7 @@ export default function SettingsPage() {
             <option value="SYSTEM">System</option>
             <option value="LIGHT">Light</option>
             <option value="DARK">Dark</option>
+            <option value="AMOLED">AMOLED</option>
           </select>
         </div>
 
@@ -85,7 +89,45 @@ export default function SettingsPage() {
               }
             }}>Import</button>
           </div>
-        </div>
+        <div className="card">
+  <div className="h2">Markdown → JSON</div>
+  <div className="muted" style={{ fontSize: 12, marginBottom: 8 }}>
+    Paste BASE_Workout markdown (weekly or a single day). Generates a Program JSON template you can import.
+  </div>
+  <textarea rows={8} value={mdText} onChange={(e)=>setMdText(e.target.value)} />
+  <div className="row" style={{ justifyContent:'flex-end', marginTop: 10 }}>
+    <button className="primary" onClick={() => {
+      try {
+        const json = markdownToProgramJSON(mdText, 'BASE_Workout');
+        setGeneratedJSON(JSON.stringify(json, null, 2));
+      } catch (e:any) {
+        alert(e?.message ?? 'Failed to convert.');
+      }
+    }}>Convert</button>
+  </div>
+  {generatedJSON ? (
+    <div style={{ marginTop: 10 }}>
+      <label>Generated JSON</label>
+      <textarea rows={10} value={generatedJSON} readOnly />
+      <div className="row" style={{ justifyContent:'flex-end', marginTop: 10, gap: 10 }}>
+        <button className="ghost" onClick={() => navigator.clipboard.writeText(generatedJSON)}>Copy</button>
+        <button className="primary" onClick={() => {
+          const blob = new Blob([generatedJSON], { type: 'application/json;charset=utf-8' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `BASE_Workout.json`;
+          document.body.appendChild(a);
+          a.click();
+          a.remove();
+          URL.revokeObjectURL(url);
+        }}>Download</button>
+      </div>
+    </div>
+  ) : null}
+</div>
+
+</div>
 
         <div className="card">
           <div className="h2">Backup reminder</div>

@@ -68,3 +68,8 @@ self.addEventListener('fetch', (event) => {
     return cached || fetchPromise;
   })());
 });
+
+self.addEventListener('message', (event) => {
+  const data = event.data || {};
+  if (data.type === 'SKIP_WAITING') self.skipWaiting();
+});
